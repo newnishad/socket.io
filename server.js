@@ -1,11 +1,28 @@
 const express = require('express');
-const port = 3000;
+const socketPort = 3000;
+const serverPort = 81;
 const http = require('http').createServer();
 const io = require('socket.io')(http, {
     cors: {
         origin: '*',
     }
 });
+
+
+// Chat application part
+
+const app = express();
+app.set('view engine', 'ejs');
+
+app.get('/', function(req, res) {
+    res.render('chat.ejs', { server: `http://${req.get('host').split(":")[0]}:${socketPort}` });
+});
+
+app.listen(serverPort);
+console.log("Chat server started on localhost: " + serverPort);
+
+
+//Socket Part
 
 var allClients = [];
 
@@ -23,10 +40,14 @@ io.on("connection", (socket) => {
         });
     });
 
-    socket.on("disconnect", (socket) => {
-        console.log("Disconnected");
-        var i = allClients.indexOf(socket);
+    socket.on("disconnect", (con) => {
+        let i = allClients.indexOf(socket);
+        let name = allClients[i].name;
         allClients.splice(i, 1);
+
+        allClients.forEach((client) => {
+            client.emit("message", name + " has left the chat!");
+        });
     });
 
     socket.on("clientmsg", (data) => {
@@ -38,6 +59,6 @@ io.on("connection", (socket) => {
     });
 });
 
-http.listen(port, () => {
-    console.log("Server is listening to localhost:" + port);
+http.listen(socketPort, () => {
+    console.log("Socket started on localhost: " + socketPort);
 });
