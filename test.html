@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+</head>
+
+<body>
+    <table id="login">
+        <tr>
+            <td>
+                <input type="text" id="name" />
+            </td>
+            <td>
+                <button onclick="login()">Join Chat!</button>
+            </td>
+        </tr>
+    </table>
+    <table id="chat" style="display: none;">
+        <tr>
+            <td>
+                <input type="text" id="input" />
+            </td>
+            <td>
+                <button onclick="sendMessage()">Send</button>
+            </td>
+        </tr>
+    </table>
+    <p id="output"></p>
+</body>
+
+</html>
+<script>
+    const output = document.getElementById("output");
+
+    var socket = io('http://localhost:3000');
+    socket.on("connect", (data) => {
+        document.getElementById("login").style.display = "block";
+        document.getElementById("chat").style.display = "none";
+    });
+
+    socket.on("message", (data) => {
+        output.innerHTML += data + "<br>";
+    });
+    socket.on("disconnect", (data) => {
+        output.innerHTML += "You are disconnected";
+    });
+
+    function login() {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("chat").style.display = "block";
+        let name = document.getElementById("name");
+        socket.emit("name", name.value);
+        name.value = "";
+    }
+
+    function sendMessage() {
+        let ctx = document.getElementById('input');
+        socket.emit("clientmsg", ctx.value);
+        ctx.value = "";
+    }
+</script>
